@@ -10,12 +10,12 @@ const gallery = document.querySelector(".gallery")
 searchForm.addEventListener("submit", onsearchFormSubmit)
 
 async function getUser() {
-return response = await axios.get(`${BASE__URL}?key=${API__KEY}&q=cat&image_type=photo&orientation=horizontal&safesearch=true`);
-    //     const response = await fetch(`${BASE__URL}?key=${API__KEY}&q=cat&image_type=photo&orientation=horizontal&safesearch=true`);
-    // if (!response.ok) {
-    // throw new Error(response.statusText);
-    // }
-    // return response.json()
+// return response = await axios.get(`${BASE__URL}?key=${API__KEY}&q=cat&image_type=photo&orientation=horizontal&safesearch=true`);
+        const response = await fetch(`${BASE__URL}?key=${API__KEY}&q=cat&image_type=photo&orientation=horizontal&safesearch=true`);
+    if (!response.ok) {
+    throw new Error(response.statusText);
+    }
+    return response.json()
 };
 
 
@@ -24,14 +24,15 @@ function onsearchFormSubmit(e) {
     e.preventDefault()
     const searchEl = e.currentTarget.elements.searchQuery.value
     getUser().then(resp => gallery.insertAdjacentHTML("beforeend",
-    markup(resp))).catch(err => console.log(err));
-
+    markup(resp.hits))).catch(err => console.log(err));
 };
 
    
 function markup(arr) {
-    console.log(arr.data.hits)
-    return arr.map(({ data: {hits: {likes}} }) =>
+  console.log(arr)
+
+  return arr.map(({ likes, views, comments, downloads }) =>
+
         `<div class="photo-card">
   <img src="" alt="" loading="lazy" />
   <div class="info">
@@ -50,6 +51,7 @@ function markup(arr) {
   </div>
 </div>`
     ).join("");
+    
 }
 // webformatURL,largeImageURL,tags,
 
