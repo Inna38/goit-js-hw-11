@@ -1,48 +1,81 @@
 import axios from 'axios';
+import Notiflix from 'notiflix';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
 
-const API__KEY = "38479410-4fdece6f7b350d5238491f06f"
-const BASE__URL = "https://pixabay.com/api/"
+const API__KEY = '38479410-4fdece6f7b350d5238491f06f';
+const BASE__URL = 'https://pixabay.com/api/';
 
+const searchForm = document.querySelector('.search-form');
+const gallery = document.querySelector('.gallery');
+const loadMore = document.querySelector('.load-more');
+let gallerySimple = document.querySelector('.gallery');
+let page = 1;
 
-const searchForm = document.querySelector(".search-form")
-const gallery = document.querySelector(".gallery")
-const loadMore = document.querySelector(".load-more")
-let page = 1
+searchForm.addEventListener('submit', onsearchFormSubmit);
+loadMore.addEventListener('click', onLoadMoreClick);
+document.addEventListener('scroll', scroll);
 
-searchForm.addEventListener("submit", onsearchFormSubmit)
-loadMore.addEventListener("click", onLoadMoreClick)
+if (localStorage.getItem('keyEl') !== null) {
+  localStorage.removeItem('keyEl');
+}
 
+async function getUser(searchEl, page = 1) {
+  const searchParams = new URLSearchParams({
+    image_type: 'photo',
+    orientation: 'horizontal',
+    safesearch: true,
+    per_page: 40,
+  });
 
-
-async function getUser(searchEl, page) {
-
-// return response = await axios.get(`${BASE__URL}?key=${API__KEY}&q=cat&image_type=photo&orientation=horizontal&safesearch=true`);
-        const response = await fetch(`${BASE__URL}?key=${API__KEY}&q=${searchEl}&image_type=photo&orientation=horizontal&safesearch=true&page=${page}&per_page=40`);
-    if (!response.ok) {
-    throw new Error(response.statusText);
-    }
-    return response.json()
-};
-
-
+  const response = await axios.get(
+    `${BASE__URL}?key=${API__KEY}&q=${searchEl}&page=${page}&${searchParams}`
+  );
+  
+  return response;
+}
 
 function onsearchFormSubmit(e) {
-  e.preventDefault()
-  const searchEl = e.currentTarget.elements.searchQuery.value
-  localStorage.setItem("keyEl", searchEl)
-  
- getUser(searchEl,1).then(resp => gallery.insertAdjacentHTML("beforeend", markup(resp.hits))).catch(err => console.log(err));
-  // e.currentTarget.reset()
-gallery.innerHTML = ""
-page = 1
-};
+  e.preventDefault();
+  const searchEl = e.currentTarget.elements.searchQuery.value;
 
+  if (searchEl === '') {
+    gallery.innerHTML = '';
+    Notiflix.Notify.info('Enter the data');
+    return;
+  }
+  localStorage.setItem('keyEl', searchEl);
+  getUser(searchEl)
+    .then(res => {
+      gallery.insertAdjacentHTML('beforeend', markup(res.data));
+      loadMore.hidden = false;
+      
+      if (!res.data.total) {
+        loadMore.hidden = true;
+        Notiflix.Notify.failure(
+          'Sorry, there are no images matching your search query. Please try again.'
+        );
+        return;
+      }
+      Notiflix.Notify.info(`Hooray! We found ${res.data.totalHits} images.`);
 
+      isTotalHits(res.data.totalHits);
+
+      gallerySimple = new SimpleLightbox('.gallery a', {});
+    })
+    .catch(err => Notiflix.Notify.failure('Error'));
+
+  gallery.innerHTML = '';
+  loadMore.hidden = true;
+}
 
 function markup(arr) {
-  return arr.map(({ largeImageURL, webformatURL, likes, views, comments, downloads }) =>
-  `<div class="photo-card">
-  <img src="${webformatURL}" alt="" loading="lazy" />
+  const hits = arr.hits;
+  return hits
+    .map(
+      ({ largeImageURL, webformatURL, likes, views, comments, downloads }) =>
+        `<div class="photo-card">
+ <a href="${largeImageURL}"> <img src="${webformatURL}" alt="img" loading="lazy"  /></a>
   <div class="info">
     <p class="info-item">
       <b>likes: ${likes}</b>
@@ -58,54 +91,43 @@ function markup(arr) {
     </p>
   </div>
 </div>`
-).join("");
-    
+    )
+    .join('');
 }
 
 function onLoadMoreClick() {
-  const local = localStorage.getItem("keyEl")
-  page += 1
-  getUser(local,page).then(resp => gallery.insertAdjacentHTML("beforeend", markup(resp.hits))).catch(err => console.log(err));
+  const local = localStorage.getItem('keyEl');
+  page += 1;
+
+  getUser(local, page)
+    .then(res => {
+      gallery.insertAdjacentHTML('beforeend', markup(res.data));
+      isTotalHits(res.data.totalHits);
+      gallerySimple = new SimpleLightbox('.gallery a', {});
+    })
+    .catch(err => Notiflix.Notify.failure('Error'));
 }
 
+function isTotalHits(num) {
+  const totalHits = num;
+  const sumTotalHits = page * 40;
+  console.log(totalHits);
+  console.log(sumTotalHits);
+  if (totalHits < sumTotalHits) {
+    loadMore.hidden = true;
+    Notiflix.Notify.info(
+      "We're sorry, but you've reached the end of search results."
+    );
+  }
+}
 
+function scroll() {
+  const { height: cardHeight } = document
+    .querySelector('.gallery')
+    .firstElementChild.getBoundingClientRect();
 
-
-// class ApiService {
-//   constructor() {
-//     this.searchQuery = "";
-//      this.page = 1;
-//   }
-
-// async  getUser() {
-//  page += 1
-// // return response = await axios.get(`${BASE__URL}?key=${API__KEY}&q=cat&image_type=photo&orientation=horizontal&safesearch=true`);
-//         const response = await fetch(`${BASE__URL}?key=${API__KEY}&q=${this.searchQuery}&image_type=photo&orientation=horizontal&safesearch=true&page=${this.page}&per_page=4`);
-//     if (!response.ok) {
-//     throw new Error(response.statusText);
-//     }
-//     return response.json()
-// };
-
-
-
-//   get query() {
-//   return this.searchQuery
-//   }
-//   set query(newQuery) {
-//     this.searchQuery = newQuery
-//   }
-
-// }
-
-
-
-
-
-
-
-
-
-// webformatURL,largeImageURL,tags,
-
-// ({hits: {likes,views,comments,downloads}})
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+}
