@@ -46,7 +46,6 @@ input {
 }
 .gallery {
   display: flex;
-
   flex-wrap: wrap;
   margin-top: -30px;
   margin-left: -30px;
@@ -89,4 +88,26 @@ img {
   border: transparent;
   background-color: cornflowerblue;
   border-radius: 5px;
+}
+
+
+@media screen and (min-width:320px) and (max-width: 767px) {
+  .gallery{
+    justify-content: center;
+  }
+.photo-card{
+    max-width: 320px;
+  flex-basis: calc((100% - 20px) / 1);
+  }
+}
+
+
+@media screen and (min-width:768px) and (max-width: 1200px) {
+  .gallery {
+    justify-content: center;
+  }
+
+  .photo-card {
+    flex-basis: calc((100% - 120px) / 2);
+  }
 }
