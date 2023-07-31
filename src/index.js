@@ -35,7 +35,7 @@ async function getUser(searchEl, page = 1) {
   return response;
 }
 
-function onsearchFormSubmit(e) {
+async function onsearchFormSubmit(e) {
   e.preventDefault();
   const searchEl = e.currentTarget.elements.searchQuery.value;
 
@@ -46,8 +46,8 @@ function onsearchFormSubmit(e) {
   }
   localStorage.setItem('keyEl', searchEl);
   getUser(searchEl)
-    .then(res => {
-      gallery.insertAdjacentHTML('beforeend', markup(res.data));
+    .then(async res => {
+     gallery.insertAdjacentHTML('beforeend', await markup(res.data));
       loadMore.hidden = false;
       
       if (!res.data.total) {
@@ -95,13 +95,13 @@ function markup(arr) {
     .join('');
 }
 
-function onLoadMoreClick() {
+async function onLoadMoreClick() {
   const local = localStorage.getItem('keyEl');
   page += 1;
 
   getUser(local, page)
-    .then(res => {
-      gallery.insertAdjacentHTML('beforeend', markup(res.data));
+    .then(async res => {
+      gallery.insertAdjacentHTML('beforeend', await markup(res.data));
       isTotalHits(res.data.totalHits);
       gallerySimple = new SimpleLightbox('.gallery a', {});
     })
@@ -130,4 +130,4 @@ function scroll() {
     top: cardHeight * 2,
     behavior: 'smooth',
   });
-}
+} 
