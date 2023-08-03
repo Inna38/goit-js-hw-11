@@ -31,7 +31,6 @@ async function getUser(searchEl, page = 1) {
   const response = await axios.get(
     `${BASE__URL}?key=${API__KEY}&q=${searchEl}&page=${page}&${searchParams}`
   );
-  
   return response;
 }
 
@@ -45,25 +44,29 @@ async function onsearchFormSubmit(e) {
     return;
   }
   localStorage.setItem('keyEl', searchEl);
-  getUser(searchEl)
-    .then(async res => {
-     gallery.insertAdjacentHTML('beforeend', await markup(res.data));
-      loadMore.hidden = false;
-      
-      if (!res.data.total) {
-        loadMore.hidden = true;
-        Notiflix.Notify.failure(
-          'Sorry, there are no images matching your search query. Please try again.'
-        );
-        return;
-      }
-      Notiflix.Notify.info(`Hooray! We found ${res.data.totalHits} images.`);
 
-      isTotalHits(res.data.totalHits);
+  try {
+    const res = await getUser(searchEl);
+    gallery.insertAdjacentHTML('beforeend', markup(res.data));
+    loadMore.hidden = false;
 
-      gallerySimple = new SimpleLightbox('.gallery a', {});
-    })
-    .catch(err => Notiflix.Notify.failure('Error'));
+    if (!res.data.total) {
+      loadMore.hidden = true;
+      Notiflix.Notify.failure(
+        'Sorry, there are no images matching your search query. Please try again.'
+      );
+      return;
+    }
+    Notiflix.Notify.info(`Hooray! We found ${res.data.totalHits} images.`);
+
+    isTotalHits(res.data.totalHits);
+
+    gallerySimple = new SimpleLightbox('.gallery a', {});
+
+    return gallery;
+  } catch (err) {
+    Notiflix.Notify.failure('Error');
+  }
 
   gallery.innerHTML = '';
   loadMore.hidden = true;
@@ -99,20 +102,20 @@ async function onLoadMoreClick() {
   const local = localStorage.getItem('keyEl');
   page += 1;
 
-  getUser(local, page)
-    .then(async res => {
-      gallery.insertAdjacentHTML('beforeend', await markup(res.data));
-      isTotalHits(res.data.totalHits);
-      gallerySimple = new SimpleLightbox('.gallery a', {});
-    })
-    .catch(err => Notiflix.Notify.failure('Error'));
+  try {
+    const res = await getUser(local, page);
+
+    gallery.insertAdjacentHTML('beforeend', markup(res.data));
+    isTotalHits(res.data.totalHits);
+    gallerySimple = new SimpleLightbox('.gallery a', {});
+  } catch (error) {
+    Notiflix.Notify.failure('Error');
+  }
 }
 
 function isTotalHits(num) {
   const totalHits = num;
   const sumTotalHits = page * 40;
-  console.log(totalHits);
-  console.log(sumTotalHits);
   if (totalHits < sumTotalHits) {
     loadMore.hidden = true;
     Notiflix.Notify.info(
@@ -130,4 +133,4 @@ function scroll() {
     top: cardHeight * 2,
     behavior: 'smooth',
   });
-} 
+}
