@@ -63,7 +63,7 @@ async function onsearchFormSubmit(e) {
 
     gallerySimple = new SimpleLightbox('.gallery a', {});
 
-    return gallery;
+    return res;
   } catch (err) {
     Notiflix.Notify.failure('Error');
   }
